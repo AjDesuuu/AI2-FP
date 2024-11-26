@@ -3,6 +3,52 @@ from tqdm import tqdm
 import os
 import pandas as pd
 import json
+import shutil
+import numpy as np
+
+
+def move_files(source_dir, destination_dir):
+    """
+    Recursively moves files and subdirectories from the source directory to the destination directory,
+    ensuring no duplicate moves are performed.
+
+    Parameters:
+        source_dir (str): Path to the directory containing the files and subdirectories to move.
+        destination_dir (str): Path to the directory where files and subdirectories should be moved.
+
+    Returns:
+        None
+    """
+    # Ensure the destination directory exists
+    os.makedirs(destination_dir, exist_ok=True)
+
+    # List files and subdirectories in source and destination
+    source_items = set(os.listdir(source_dir))  # files and subdirectories in source
+    destination_items = set(os.listdir(destination_dir))  # items already in destination
+
+    # Identify items to move (files or subdirectories)
+    items_to_move = source_items - destination_items
+
+    if not items_to_move:
+        print("No files or subdirectories to move. All are already in the destination.")
+        return
+
+    # Function to move a file or directory
+    def move_item(src, dest):
+        if os.path.isdir(src):  # If it's a directory, use shutil.move for the whole folder
+            shutil.move(src, dest)
+        else:  # If it's a file, just move the file
+            shutil.move(src, dest)
+
+    # Move items (both files and subdirectories) with a progress bar
+    for item in tqdm(items_to_move, desc="Moving items"):
+        source_path = os.path.join(source_dir, item)
+        destination_path = os.path.join(destination_dir, item)
+        
+        move_item(source_path, destination_path)
+
+    print(f"Moved {len(items_to_move)} item(s) from {source_dir} to {destination_dir}.")
+    
 
 def convert_annotations_to_yolo(annotations_train_path, annotations_val_path, 
                                  output_labels_train_path, output_labels_val_path, 
