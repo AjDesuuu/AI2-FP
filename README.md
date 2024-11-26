@@ -1,5 +1,6 @@
 # AI2-FP
 A repository for the AI2 final project requirement. This project is focused on using Yolo models for object detection using the BDD100k dataset.
+Presentation can be found [here](https://www.canva.com/design/DAGXiwrcX5E/JC25ZTN9MRc8NrK4HMKqoA/edit?utm_content=DAGXiwrcX5E&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)!
 
 Some instructions:
 - The BDD100k dataset will automatically be downloaded and extracted in the path specified after the conversion process.
