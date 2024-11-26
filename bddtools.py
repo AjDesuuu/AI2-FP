@@ -1,3 +1,9 @@
+
+from tqdm import tqdm
+import os
+import pandas as pd
+import json
+
 def convert_annotations_to_yolo(annotations_train_path, annotations_val_path, 
                                  output_labels_train_path, output_labels_val_path, 
                                  image_width, image_height, class_mapping):
@@ -30,7 +36,6 @@ def convert_annotations_to_yolo(annotations_train_path, annotations_val_path,
 
             # Check if label file already exists; skip if it does
             if os.path.exists(label_file_path):
-                print(f"Skipping {label_file_path} (already exists)")
                 continue
 
             yolo_labels = []
@@ -83,11 +88,11 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
     """
     label_data = []
 
-    for label_file in os.listdir(output_dir):
-        # Ensure the file is a .txt file
-        if not label_file.endswith(".txt"):
-            continue
-        
+    # List all .txt files in the directory
+    label_files = [f for f in os.listdir(output_dir) if f.endswith(".txt")]
+
+    # Iterate through the label files with a progress bar
+    for label_file in tqdm(label_files, desc="Processing YOLO labels"):
         file_path = os.path.join(output_dir, label_file)
         with open(file_path, "r") as f:
             lines = f.readlines()

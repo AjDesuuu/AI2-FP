@@ -1,3 +1,8 @@
+import os
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import json
 
 def plot_class_distribution(train_df, val_df, class_mapping):
     """
