@@ -1,0 +1,32 @@
+train: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500/images/train  # Path to training images
+val: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500/images/val    # Path to validation images
+
+# Number of classes (Update based on BDD100K or your custom classes)
+nc: 10  # Number of classes (adjust according to your dataset)
+
+# Class names (Corresponds to the BDD100K categories you plan to use)
+names:
+  0: "car"
+  1: "truck"
+  2: "bus"
+  3: "motorcycle"
+  4: "bicycle"
+  5: "pedestrian"
+  6: "traffic light"
+  7: "traffic sign"
+  8: "train"
+  9: "rider"
+
+
+augment:
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 10.0
+  translate: 0.1
+  scale: 0.5
+  shear: 0.1
+  flipud: 0.0
+  fliplr: 0.5
+# (Optional) Additional settings such as augmentation or image size
+# Note: Typically YOLOv5 or YOLOv8 model will use 640px or 1280px image size by default.
