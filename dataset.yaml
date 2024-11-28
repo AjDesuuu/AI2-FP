@@ -1,5 +1,7 @@
-train: C:/Users/Aaron/Jupyter/FinalProj/dataset/images/train  # Path to training images
-val: C:/Users/Aaron/Jupyter/FinalProj/dataset/images/val    # Path to validation images
+path: C:\Users\Aaron\Documents\GitHub\AI2-FP #CHANGE THIS according to where your AI2-FP folder is located.
+
+train: dataset/images/train  # Path to training images
+val: dataset/images/val    # Path to validation images
 
 # Number of classes (Update based on BDD100K or your custom classes)
 nc: 10  # Number of classes (adjust according to your dataset)
