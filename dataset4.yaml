@@ -1,5 +1,5 @@
-train: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500/images/train  # Path to training images
-val: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500/images/val    # Path to validation images
+train: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500_2/images/train  # Path to training images
+val: C:/Users/Aaron/Jupyter/FinalProj/dataset_1500_2/images/val    # Path to validation images
 
 # Number of classes (Update based on BDD100K or your custom classes)
 nc: 10  # Number of classes (adjust according to your dataset)
