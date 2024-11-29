@@ -6,6 +6,7 @@ import json
 import cv2
 import numpy as np
 from collections import Counter
+from pathlib import Path
 
 def plot_class_distribution(train_df, val_df, class_mapping):
     """
