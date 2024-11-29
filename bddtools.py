@@ -275,7 +275,6 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
     # Convert list to DataFrame
     return pd.DataFrame(label_data)
 
-
 def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     """
     Creates a dataset YAML file dynamically.
@@ -289,20 +288,22 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     Returns:
         str: Path to the created YAML file.
     """
-    # Paths for train, val, and test
+    # Paths for train and val
     train_path = os.path.join(base_path, dataset_name, "images", "train")
     val_path = os.path.join(base_path, dataset_name, "images", "val")
     
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    
+
+    # Sort class_mapping by keys (class IDs) and extract class names in order
+    sorted_class_names = [name for _, name in sorted(class_mapping.items())]
+
     # Construct the YAML content
     yaml_data = {
-        "path": os.path.abspath(base_path),  # Absolute base path
-        "train": os.path.relpath(train_path, start=base_path),
-        "val": os.path.relpath(val_path, start=base_path),
+        "train": os.path.abspath(train_path).replace("\\", "/"),
+        "val": os.path.abspath(val_path).replace("\\", "/"),
         "nc": len(class_mapping),  # Number of classes
-        "names": class_mapping
+        "names": sorted_class_names,  # Ordered list of class names
     }
 
     # Save the YAML file
@@ -312,3 +313,32 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
 
     print(f"YAML file created: {yaml_path}")
     return yaml_path
+
+
+
+def save_image_names_to_json(source_dir, output_json):
+    """
+    Scans a folder for image files and saves their filenames to a JSON file.
+
+    Parameters:
+        source_dir (str): Path to the folder containing images.
+        output_json (str): Path to the JSON file where the list of image names will be saved.
+
+    Returns:
+        None
+    """
+    # Define supported image file extensions
+    image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
+    
+    # Get a list of all image files in the source directory
+    image_files = [f for f in os.listdir(source_dir) 
+                   if os.path.isfile(os.path.join(source_dir, f)) and 
+                   os.path.splitext(f)[1].lower() in image_extensions]
+    
+    # Save the list to a JSON file
+    with open(output_json, 'w') as json_file:
+        json.dump(image_files, json_file, indent=4)
+    
+    print(f"Saved {len(image_files)} image filenames to '{output_json}'.")
+
+

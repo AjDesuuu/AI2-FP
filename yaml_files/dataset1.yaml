@@ -1,0 +1,14 @@
+names:
+- 4
+- 2
+- 0
+- 3
+- 5
+- 9
+- 6
+- 7
+- 8
+- 1
+nc: 10
+train: c:/Users/Aaron/Documents/GitHub/AI2-FP/dataset1/images/train
+val: c:/Users/Aaron/Documents/GitHub/AI2-FP/dataset1/images/val
