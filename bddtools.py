@@ -6,7 +6,7 @@ import pandas as pd
 import json
 import shutil
 import yaml
-import numpy as np
+import cv2
 
 
 def flatten_folders(source_dir, destination_dir):
@@ -368,6 +368,7 @@ def set_paths():
             "dataset2_path": "/content/yaml_files/dataset2.yaml",
             "dataset3_path": "/content/yaml_files/dataset3.yaml",
             "dataset4_path": "/content/yaml_files/dataset4.yaml",
+            "dataset5_path": "/content/yaml_files/dataset5.yaml",
             "project_path": "/content/drive/MyDrive/FinalProjectRuntimeruns/train"
         }
     else:
@@ -377,6 +378,7 @@ def set_paths():
             "dataset2_path": "yaml_files/dataset2.yaml",
             "dataset3_path": "yaml_files/dataset3.yaml",
             "dataset4_path": "yaml_files/dataset4.yaml",
+            "dataset5_path": "yaml_files/dataset5.yaml",
             "project_path": "runs/train"
         }
 
@@ -385,6 +387,7 @@ def set_paths():
     print(f"Dataset 2 path: {paths['dataset2_path']}")
     print(f"Dataset 3 path: {paths['dataset3_path']}")
     print(f"Dataset 4 path: {paths['dataset4_path']}")
+    print(f"Dataset 5 path: {paths['dataset5_path']}")
     print(f"Project path: {paths['project_path']}")
 
     return paths
