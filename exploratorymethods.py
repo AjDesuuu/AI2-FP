@@ -291,8 +291,6 @@ def brightness_and_contrast_analysis(images_train_path, images_val_path, images_
     print("\nContrast Analysis:")
     print(contrast_stats)
 
-# function(s) below are still in testing
-
 def detect_blurry_images(images_train_path, images_val_path, images_test_path, threshold=100.0):
     """
     Detects blurry images in train, val, and test datasets and visualizes the counts.
