@@ -275,6 +275,8 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
     # Convert list to DataFrame
     return pd.DataFrame(label_data)
 
+
+
 def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     """
     Creates a dataset YAML file dynamically.
@@ -288,30 +290,30 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     Returns:
         str: Path to the created YAML file.
     """
-    # Paths for train and val
-    train_path = os.path.join(base_path, dataset_name, "images", "train")
-    val_path = os.path.join(base_path, dataset_name, "images", "val")
-    
-    # Ensure output directory exists
+ 
+    # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    # Sort class_mapping by keys (class IDs) and extract class names in order
-    sorted_class_names = [name for _, name in sorted(class_mapping.items())]
-
-    # Construct the YAML content
-    yaml_data = {
-        "train": os.path.abspath(train_path).replace("\\", "/"),
-        "val": os.path.abspath(val_path).replace("\\", "/"),
+    # Construct YAML content
+    yaml_content = {
+        "path": os.path.abspath(base_path).replace("\\", "/"),
+        "train": dataset_name + "/images/train",
+        "val": dataset_name + "/images/val",
         "nc": len(class_mapping),  # Number of classes
-        "names": sorted_class_names,  # Ordered list of class names
+        "names": {k: class_mapping[k] for k in class_mapping},  # Keep order as provided
     }
 
-    # Save the YAML file
+    # Create the YAML file
     yaml_path = os.path.join(output_dir, f"{dataset_name}.yaml")
-    with open(yaml_path, "w") as yaml_file:
-        yaml.dump(yaml_data, yaml_file, default_flow_style=False)
+    with open(yaml_path, "w") as file:
+        yaml.dump(
+            yaml_content,
+            file,
+            default_flow_style=False,
+            sort_keys=False,  # Prevent sorting of dictionary keys
+        )
 
-    print(f"YAML file created: {yaml_path}")
+    print(f"YAML file created at: {yaml_path}")
     return yaml_path
 
 
