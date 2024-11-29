@@ -1,10 +1,93 @@
 
+import random
 from tqdm import tqdm
 import os
 import pandas as pd
 import json
 import shutil
-import numpy as np
+import yaml
+
+
+def flatten_folders(source_dir, destination_dir):
+    """
+    Recursively moves all files from subdirectories of the source directory to the destination directory.
+    The function flattens the folder structure, ensuring all files are in the root of the destination directory.
+
+    Parameters:
+        source_dir (str): Path to the directory containing files and subdirectories to flatten.
+        destination_dir (str): Path to the directory where all files should be moved.
+
+    Returns:
+        None
+    """
+    # Ensure the destination directory exists
+    os.makedirs(destination_dir, exist_ok=True)
+
+    # Collect all file paths in the source directory and subdirectories
+    files_to_move = []
+    for root, _, files in os.walk(source_dir):
+        for file in files:
+            files_to_move.append(os.path.join(root, file))
+
+    # If no files are found, inform the user and exit
+    if not files_to_move:
+        print(f"No files found in '{source_dir}'.")
+        return
+
+    # Move each file to the destination directory with a progress bar
+    for file_path in tqdm(files_to_move, desc="Flattening folders"):
+        dest_path = os.path.join(destination_dir, os.path.basename(file_path))
+        shutil.move(file_path, dest_path)
+
+    print(f"Moved {len(files_to_move)} files from '{source_dir}' to '{destination_dir}'.")
+
+def copy_files(source_dir, destination_dir, items=None, pick=None):
+    """
+    Copies files from the source directory to the destination directory.
+    
+    - If `items` is specified, randomly selects that many files to copy.
+    - If `pick` is specified, uses a JSON file containing a list of filenames to copy.
+    - If neither is specified, copies all files.
+    
+    Parameters:
+        source_dir (str): Path to the source directory.
+        destination_dir (str): Path to the destination directory.
+        items (int, optional): Number of files to copy. Ignored if `pick` is specified.
+        pick (str, optional): Path to a JSON file containing a list of filenames to copy.
+    
+    Returns:
+        None
+    """
+    os.makedirs(destination_dir, exist_ok=True)
+
+    # Read the list of all files in the source directory
+    all_files = [f for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f))]
+    if not all_files:
+        print(f"No files found in '{source_dir}'.")
+        return
+
+    # Use the "pick" JSON file to select specific files
+    if pick:
+        try:
+            with open(pick, 'r') as file:
+                picked_files = json.load(file)
+            files_to_copy = [f for f in all_files if f in picked_files]
+        except Exception as e:
+            print(f"Error reading 'pick' file: {e}")
+            return
+    # Otherwise, randomly sample a subset of files or copy all files
+    elif items is not None:
+        files_to_copy = random.sample(all_files, min(items, len(all_files)))
+    else:
+        files_to_copy = all_files
+
+    # Copy the files to the destination directory
+    for file in tqdm(files_to_copy, desc="Copying files"):
+        src_path = os.path.join(source_dir, file)
+        dest_path = os.path.join(destination_dir, file)
+        shutil.copy(src_path, dest_path)
+
+    print(f"Copied {len(files_to_copy)} files from '{source_dir}' to '{destination_dir}'.")
 
 
 def move_files(source_dir, destination_dir):
@@ -171,3 +254,41 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
 
     # Convert list to DataFrame
     return pd.DataFrame(label_data)
+
+
+def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
+    """
+    Creates a dataset YAML file dynamically.
+
+    Parameters:
+        dataset_name (str): Name of the dataset (e.g., 'dataset1', 'dataset2').
+        base_path (str): Path to the root folder where the datasets are stored.
+        output_dir (str): Directory to save the generated YAML file.
+        class_mapping (dict): Dictionary mapping class IDs to class names.
+
+    Returns:
+        str: Path to the created YAML file.
+    """
+    # Paths for train, val, and test
+    train_path = os.path.join(base_path, dataset_name, "images", "train")
+    val_path = os.path.join(base_path, dataset_name, "images", "val")
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Construct the YAML content
+    yaml_data = {
+        "path": os.path.abspath(base_path),  # Absolute base path
+        "train": os.path.relpath(train_path, start=base_path),
+        "val": os.path.relpath(val_path, start=base_path),
+        "nc": len(class_mapping),  # Number of classes
+        "names": class_mapping
+    }
+
+    # Save the YAML file
+    yaml_path = os.path.join(output_dir, f"{dataset_name}.yaml")
+    with open(yaml_path, "w") as yaml_file:
+        yaml.dump(yaml_data, yaml_file, default_flow_style=False)
+
+    print(f"YAML file created: {yaml_path}")
+    return yaml_path

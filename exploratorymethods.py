@@ -3,10 +3,11 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import json
+from collections import Counter
 
 def plot_class_distribution(train_df, val_df, class_mapping):
     """
-    Plots the class distribution for training and validation datasets.
+    Plots the class distribution for training and validation datasets with specific numbers displayed on bars.
 
     Parameters:
         train_df (DataFrame): DataFrame containing training YOLO labels.
@@ -24,19 +25,22 @@ def plot_class_distribution(train_df, val_df, class_mapping):
     # Plot class distributions
     fig, axes = plt.subplots(1, 2, figsize=(16, 6), sharey=True)
     
-    sns.countplot(data=train_df, x="class_name", order=class_names.values(), ax=axes[0], palette="pastel")
-    axes[0].set_title("Training Dataset Class Distribution")
-    axes[0].set_xlabel("Class Name")
-    axes[0].set_ylabel("Frequency")
-    axes[0].tick_params(axis='x', rotation=45)
+    train_ax = sns.countplot(data=train_df, x="class_name", order=class_names.values(), ax=axes[0], palette="pastel")
+    train_ax.set_title("Training Dataset Class Distribution")
+    train_ax.set_xlabel("Class Name")
+    train_ax.set_ylabel("Frequency")
+    train_ax.tick_params(axis='x', rotation=45)
+    train_ax.bar_label(train_ax.containers[0])  # Add labels to the bars
 
-    sns.countplot(data=val_df, x="class_name", order=class_names.values(), ax=axes[1], palette="muted")
-    axes[1].set_title("Validation Dataset Class Distribution")
-    axes[1].set_xlabel("Class Name")
-    axes[1].tick_params(axis='x', rotation=45)
+    val_ax = sns.countplot(data=val_df, x="class_name", order=class_names.values(), ax=axes[1], palette="muted")
+    val_ax.set_title("Validation Dataset Class Distribution")
+    val_ax.set_xlabel("Class Name")
+    val_ax.tick_params(axis='x', rotation=45)
+    val_ax.bar_label(val_ax.containers[0])  # Add labels to the bars
 
     plt.tight_layout()
     plt.show()
+
 
 def plot_bbox_size_distribution(train_df, val_df):
     """
@@ -121,7 +125,7 @@ def plot_bbox_area_distribution(train_df, val_df):
 
 def analyze_time_of_day(annotations_path):
     """
-    Analyze the number of images filmed during the day, night, and other times.
+    Analyze the number of images filmed during the day, night, and other times, with specific numbers on bars.
     
     Parameters:
     - annotations_path (str): Path to the annotations JSON file.
@@ -143,13 +147,61 @@ def analyze_time_of_day(annotations_path):
     time_of_day_counts = pd.Series(time_of_day_list).value_counts()
     
     # Plot the distribution
-    plt.figure(figsize=(8, 5))
-    time_of_day_counts.plot(kind="bar", color=["skyblue", "orange", "green", "purple"])
-    plt.title("Distribution of Images by Time of Day")
-    plt.xlabel("Time of Day")
-    plt.ylabel("Number of Images")
+    fig, ax = plt.subplots(figsize=(8, 5))
+    bars = time_of_day_counts.plot(kind="bar", color=["skyblue", "orange", "green", "purple"], ax=ax)
+    ax.set_title("Distribution of Images by Time of Day")
+    ax.set_xlabel("Time of Day")
+    ax.set_ylabel("Number of Images")
+    ax.bar_label(bars.containers[0])  # Add labels to the bars
+    ax.grid(axis="y", linestyle="--", alpha=0.7)
     plt.xticks(rotation=45)
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
     plt.show()
 
 
+
+def check_file_format_distribution(images_train_path, images_val_path, images_test_path):
+    """
+    Checks and visualizes the number of images per file format across train, val, and test directories.
+    Parameters:
+        images_train_path (str): Path to the training images directory.
+        images_val_path (str): Path to the validation images directory.
+        images_test_path (str): Path to the test images directory.
+    Returns:
+        None (Displays a bar plot of file format distribution)
+    """
+    # Combine all file paths for analysis
+    all_paths = {
+        "Train": images_train_path,
+        "Validation": images_val_path,
+        "Test": images_test_path,
+    }
+    
+    # Initialize a Counter for file formats
+    format_counts = Counter()
+    # Analyze each dataset split
+    for split_name, path in all_paths.items():
+        formats = [
+            os.path.splitext(file)[1].lower()
+            for root, _, files in os.walk(path)
+            for file in files
+            if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'))
+        ]
+        for fmt, count in Counter(formats).items():
+            format_counts[f"{split_name} ({fmt})"] = count
+    # Convert to DataFrame for plotting
+    format_df = pd.DataFrame(format_counts.items(), columns=["Split and Format", "Count"])
+    format_df = format_df.sort_values(by="Count", ascending=False)
+    # Plot the distribution
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x="Split and Format", y="Count", data=format_df, palette="viridis")
+    plt.title("Number of Images per File Format by Dataset Split")
+    plt.xlabel("Dataset Split and File Format")
+    plt.ylabel("Number of Images")
+    plt.xticks(rotation=45, ha="right")
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+    # Print the counts
+    print("File Format Distribution Across Splits:")
+    print(format_df.to_string(index=False))
