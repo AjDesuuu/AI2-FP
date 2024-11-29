@@ -3,6 +3,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import json
+import cv2
 from collections import Counter
 
 def plot_class_distribution(train_df, val_df, class_mapping):
@@ -205,3 +206,55 @@ def check_file_format_distribution(images_train_path, images_val_path, images_te
     # Print the counts
     print("File Format Distribution Across Splits:")
     print(format_df.to_string(index=False))
+
+def plot_image_dimensions_histogram(images_train_path, images_val_path, images_test_path):
+    """
+    Plots histograms for image heights and widths across train, val, and test datasets.
+
+    Parameters:
+        images_train_path (str): Path to the training images directory.
+        images_val_path (str): Path to the validation images directory.
+        images_test_path (str): Path to the test images directory.
+
+    Returns:
+        None (Displays histograms for image heights and widths)
+    """
+    # Combine all file paths for analysis
+    all_paths = {
+        "Train": images_train_path,
+        "Validation": images_val_path,
+        "Test": images_test_path,
+    }
+    
+    # Initialize dictionaries for heights and widths
+    heights = {"Train": [], "Validation": [], "Test": []}
+    widths = {"Train": [], "Validation": [], "Test": []}
+
+    # Collect image dimensions
+    for split_name, path in all_paths.items():
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                    img_path = os.path.join(root, file)
+                    img = cv2.imread(img_path)
+                    if img is not None:
+                        h, w = img.shape[:2]
+                        heights[split_name].append(h)
+                        widths[split_name].append(w)
+
+    # Plot histograms
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10), sharey=True)
+
+    for i, split_name in enumerate(["Train", "Validation", "Test"]):
+        sns.histplot(heights[split_name], kde=True, bins=30, ax=axes[0, i], color="blue", alpha=0.7)
+        axes[0, i].set_title(f"{split_name} Image Heights")
+        axes[0, i].set_xlabel("Height (pixels)")
+        axes[0, i].set_ylabel("Frequency")
+
+        sns.histplot(widths[split_name], kde=True, bins=30, ax=axes[1, i], color="green", alpha=0.7)
+        axes[1, i].set_title(f"{split_name} Image Widths")
+        axes[1, i].set_xlabel("Width (pixels)")
+        axes[1, i].set_ylabel("Frequency")
+
+    plt.tight_layout()
+    plt.show()
