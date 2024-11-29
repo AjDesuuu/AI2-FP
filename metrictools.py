@@ -71,10 +71,12 @@ def display_results(results):
         None
     """
 
-    
+    plt.figure(figsize=(10, 10))
     # Display results with bounding boxes
     for result in results:
         boxes = result.boxes  # Assuming `result.boxes` contains the detected boxes
         plt.imshow(result.plot())  # Assuming `result.plot()` returns an image with drawn boxes
         plt.axis("off")  # Hide axes
         plt.show()  # Display the plot
+
+    return
