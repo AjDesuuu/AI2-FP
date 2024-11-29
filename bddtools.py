@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import shutil
 import yaml
+import numpy as np
 
 
 def flatten_folders(source_dir, destination_dir):
@@ -276,7 +277,6 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
     return pd.DataFrame(label_data)
 
 
-
 def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     """
     Creates a dataset YAML file dynamically.
@@ -285,22 +285,24 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
         dataset_name (str): Name of the dataset (e.g., 'dataset1', 'dataset2').
         base_path (str): Path to the root folder where the datasets are stored.
         output_dir (str): Directory to save the generated YAML file.
-        class_mapping (dict): Dictionary mapping class IDs to class names.
+        class_mapping (dict): Dictionary mapping class names to class IDs.
 
     Returns:
         str: Path to the created YAML file.
     """
- 
     # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
+
+    # Reverse the class_mapping for the YAML format
+    reversed_mapping = {v: k for k, v in class_mapping.items()}
 
     # Construct YAML content
     yaml_content = {
         "path": os.path.abspath(base_path).replace("\\", "/"),
         "train": dataset_name + "/images/train",
         "val": dataset_name + "/images/val",
-        "nc": len(class_mapping),  # Number of classes
-        "names": {k: class_mapping[k] for k in class_mapping},  # Keep order as provided
+        "nc": len(reversed_mapping),  # Number of classes
+        "names": reversed_mapping,   # Use reversed mapping for correct format
     }
 
     # Create the YAML file
@@ -315,7 +317,6 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
 
     print(f"YAML file created at: {yaml_path}")
     return yaml_path
-
 
 
 def save_image_names_to_json(source_dir, output_json):
@@ -363,10 +364,10 @@ def set_paths():
         from google.colab import drive
         drive.mount('/content/drive')
         paths = {
-            "dataset1_path": "/content/drive/MyDrive/yaml_files/dataset1.yaml",
-            "dataset2_path": "/content/drive/MyDrive/yaml_files/dataset2.yaml",
-            "dataset3_path": "/content/drive/MyDrive/yaml_files/dataset3.yaml",
-            "dataset4_path": "/content/drive/MyDrive/yaml_files/dataset4.yaml",
+            "dataset1_path": "/content/yaml_files/dataset1.yaml",
+            "dataset2_path": "/content/yaml_files/dataset2.yaml",
+            "dataset3_path": "/content/yaml_files/dataset3.yaml",
+            "dataset4_path": "/content/yaml_files/dataset4.yaml",
             "project_path": "/content/drive/MyDrive/FinalProjectRuntimeruns/train"
         }
     else:
