@@ -353,14 +353,13 @@ def set_paths():
     """
     try:
         # Check if running in Google Colab
-        import google.colab
         IN_COLAB = True
     except ImportError:
         IN_COLAB = False
 
     if IN_COLAB:
         # Google Colab environment
-        from google.colab import drive
+        from google.colab import drive # type: ignore
         drive.mount('/content/drive')
         paths = {
             "dataset1_path": "/content/drive/MyDrive/yaml_files/dataset1.yaml",
