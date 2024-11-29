@@ -70,9 +70,7 @@ def display_results(results):
     Returns:
         None
     """
-    # Show results using the `show()` method
-    for result in results:
-        result.show()
+
     
     # Display results with bounding boxes
     for result in results:
