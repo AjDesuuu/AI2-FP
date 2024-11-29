@@ -6,6 +6,7 @@ import pandas as pd
 import json
 import shutil
 import yaml
+import numpy as np
 
 
 def flatten_folders(source_dir, destination_dir):
