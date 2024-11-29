@@ -344,3 +344,47 @@ def save_image_names_to_json(source_dir, output_json):
     print(f"Saved {len(image_files)} image filenames to '{output_json}'.")
 
 
+def set_paths():
+    """
+    Sets the dataset paths and project path depending on whether the code is running in Google Colab or a local machine.
+
+    Returns:
+        dict: A dictionary containing the paths for the datasets and project.
+    """
+    try:
+        # Check if running in Google Colab
+        import google.colab
+        IN_COLAB = True
+    except ImportError:
+        IN_COLAB = False
+
+    if IN_COLAB:
+        # Google Colab environment
+        from google.colab import drive
+        drive.mount('/content/drive')
+        paths = {
+            "dataset1_path": "/content/drive/MyDrive/yaml_files/dataset1.yaml",
+            "dataset2_path": "/content/drive/MyDrive/yaml_files/dataset2.yaml",
+            "dataset3_path": "/content/drive/MyDrive/yaml_files/dataset3.yaml",
+            "dataset4_path": "/content/drive/MyDrive/yaml_files/dataset4.yaml",
+            "project_path": "/content/drive/MyDrive/FinalProjectRuntimeruns/train"
+        }
+    else:
+        # Local environment
+        paths = {
+            "dataset1_path": "yaml_files/dataset1.yaml",
+            "dataset2_path": "yaml_files/dataset2.yaml",
+            "dataset3_path": "yaml_files/dataset3.yaml",
+            "dataset4_path": "yaml_files/dataset4.yaml",
+            "project_path": "runs/train"
+        }
+
+    # Print paths for verification
+    print(f"Dataset 1 path: {paths['dataset1_path']}")
+    print(f"Dataset 2 path: {paths['dataset2_path']}")
+    print(f"Dataset 3 path: {paths['dataset3_path']}")
+    print(f"Dataset 4 path: {paths['dataset4_path']}")
+    print(f"Project path: {paths['project_path']}")
+
+    return paths
+
