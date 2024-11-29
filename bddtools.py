@@ -362,10 +362,10 @@ def set_paths():
         from google.colab import drive # type: ignore
         drive.mount('/content/drive')
         paths = {
-            "dataset1_path": "/content/drive/MyDrive/yaml_files/dataset1.yaml",
-            "dataset2_path": "/content/drive/MyDrive/yaml_files/dataset2.yaml",
-            "dataset3_path": "/content/drive/MyDrive/yaml_files/dataset3.yaml",
-            "dataset4_path": "/content/drive/MyDrive/yaml_files/dataset4.yaml",
+            "dataset1_path": "/content/yaml_files/dataset1.yaml",
+            "dataset2_path": "/content/yaml_files/dataset2.yaml",
+            "dataset3_path": "/content/yaml_files/dataset3.yaml",
+            "dataset4_path": "/content/yaml_files/dataset4.yaml",
             "project_path": "/content/drive/MyDrive/FinalProjectRuntimeruns/train"
         }
     else:
