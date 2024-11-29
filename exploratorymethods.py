@@ -99,6 +99,7 @@ def plot_aspect_ratio_distribution(train_df, val_df):
     plt.tight_layout()
     plt.show()
 
+
 def plot_bbox_area_distribution(train_df, val_df):
     """
     Plots the distribution of bounding box areas for both training and validation datasets.
@@ -158,7 +159,6 @@ def analyze_time_of_day(annotations_path):
     ax.grid(axis="y", linestyle="--", alpha=0.7)
     plt.xticks(rotation=45)
     plt.show()
-
 
 
 def check_file_format_distribution(images_train_path, images_val_path, images_test_path):
@@ -232,64 +232,6 @@ def check_file_format_distribution(images_train_path, images_val_path, images_te
     print("File Format Distribution Across All Dataset Splits:")
     print(format_df.to_string(index=False))
 
-def brightness_and_contrast_analysis(images_train_path, images_val_path, images_test_path):
-    """
-    Analyzes the brightness and contrast of images across the train, val, and test datasets.
-    
-    Parameters:
-        images_train_path (str): Path to the training images directory.
-        images_val_path (str): Path to the validation images directory.
-        images_test_path (str): Path to the testing images directory.
-    
-    Returns:
-        None (Displays the brightness and contrast statistics)
-    """
-    # Combine all file paths for analysis
-    all_paths = {
-        "Train": images_train_path,
-        "Validation": images_val_path,
-        "Test": images_test_path,
-    }
-
-    # Initialize lists to store brightness and contrast values
-    brightness_values = {"Train": [], "Validation": [], "Test": []}
-    contrast_values = {"Train": [], "Validation": [], "Test": []}
-
-    # Function to calculate brightness and contrast of an image
-    def calculate_brightness_and_contrast(img):
-        brightness = np.mean(img)
-        contrast = np.std(img)
-        return brightness, contrast
-
-    # Collect brightness and contrast values for each dataset split
-    for split_name, path in all_paths.items():
-        for root, _, files in os.walk(path):
-            for file in files:
-                if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
-                    img_path = os.path.join(root, file)
-                    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Convert to grayscale
-                    if img is not None:
-                        brightness, contrast = calculate_brightness_and_contrast(img)
-                        brightness_values[split_name].append(brightness)
-                        contrast_values[split_name].append(contrast)
-
-    # Combine all values for analysis
-    all_brightness = brightness_values["Train"] + brightness_values["Validation"] + brightness_values["Test"]
-    all_contrast = contrast_values["Train"] + contrast_values["Validation"] + contrast_values["Test"]
-
-    # Create DataFrames for brightness and contrast
-    brightness_df = pd.Series(all_brightness)
-    contrast_df = pd.Series(all_contrast)
-
-    # Get the descriptive statistics for brightness and contrast
-    brightness_stats = brightness_df.describe()
-    contrast_stats = contrast_df.describe()
-
-    # Print the results in the desired format
-    print("Brightness Analysis:")
-    print(brightness_stats)
-    print("\nContrast Analysis:")
-    print(contrast_stats)
 
 def detect_blurry_images(images_train_path, images_val_path, images_test_path, threshold=100.0):
     """
@@ -356,6 +298,7 @@ def detect_blurry_images(images_train_path, images_val_path, images_test_path, t
     # Print a summary
     print("Summary of Blurry Images:")
     print(results_df.to_string(index=False))
+
 
 def display_image_grid(image_dir, num_images_to_show=9, num_cols=3, figsize_per_row=(15, 5), verbose=True, seed=None):
     """
