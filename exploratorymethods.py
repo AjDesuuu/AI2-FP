@@ -258,3 +258,69 @@ def plot_image_dimensions_histogram(images_train_path, images_val_path, images_t
 
     plt.tight_layout()
     plt.show()
+
+def detect_blurry_images(images_train_path, images_val_path, images_test_path, threshold=100.0):
+    """
+    Detects blurry images in train, val, and test datasets and visualizes the counts.
+
+    Parameters:
+        images_train_path (str): Path to the training images directory.
+        images_val_path (str): Path to the validation images directory.
+        images_test_path (str): Path to the test images directory.
+        threshold (float): Threshold value for the Laplacian variance below which an image is considered blurry.
+
+    Returns:
+        None (Displays a bar plot of blurry and non-blurry images per dataset split)
+    """
+    # Combine all file paths for analysis
+    all_paths = {
+        "Train": images_train_path,
+        "Validation": images_val_path,
+        "Test": images_test_path,
+    }
+    
+    # Initialize counters
+    results = {"Dataset": [], "Blurry": [], "Non-Blurry": []}
+
+    # Analyze each dataset split
+    for split_name, path in all_paths.items():
+        blurry_count = 0
+        non_blurry_count = 0
+
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                    img_path = os.path.join(root, file)
+                    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+                    if img is not None:
+                        # Compute Laplacian variance
+                        laplacian_var = cv2.Laplacian(img, cv2.CV_64F).var()
+                        if laplacian_var < threshold:
+                            blurry_count += 1
+                        else:
+                            non_blurry_count += 1
+
+        # Append results
+        results["Dataset"].append(split_name)
+        results["Blurry"].append(blurry_count)
+        results["Non-Blurry"].append(non_blurry_count)
+
+    # Convert results to DataFrame
+    results_df = pd.DataFrame(results)
+
+    # Plot the results
+    results_df.set_index("Dataset")[["Blurry", "Non-Blurry"]].plot(
+        kind="bar", stacked=True, figsize=(10, 6), color=["red", "green"], alpha=0.8
+    )
+    plt.title("Blurry vs Non-Blurry Images by Dataset Split")
+    plt.xlabel("Dataset Split")
+    plt.ylabel("Number of Images")
+    plt.xticks(rotation=0)
+    plt.legend(title="Image Quality")
+    plt.grid(axis="y", linestyle="--", alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+    # Print a summary
+    print("Summary of Blurry Images:")
+    print(results_df.to_string(index=False))
