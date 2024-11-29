@@ -276,6 +276,7 @@ def yolo_labels_to_dataframe(output_dir, img_width, img_height):
     return pd.DataFrame(label_data)
 
 
+
 def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     """
     Creates a dataset YAML file dynamically.
@@ -289,26 +290,101 @@ def create_dataset_yaml(dataset_name, base_path, output_dir, class_mapping):
     Returns:
         str: Path to the created YAML file.
     """
-    # Paths for train, val, and test
-    train_path = os.path.join(base_path, dataset_name, "images", "train")
-    val_path = os.path.join(base_path, dataset_name, "images", "val")
-    
-    # Ensure output directory exists
+ 
+    # Ensure the output directory exists
     os.makedirs(output_dir, exist_ok=True)
-    
-    # Construct the YAML content
-    yaml_data = {
-        "path": os.path.abspath(base_path),  # Absolute base path
-        "train": os.path.relpath(train_path, start=base_path),
-        "val": os.path.relpath(val_path, start=base_path),
+
+    # Construct YAML content
+    yaml_content = {
+        "path": os.path.abspath(base_path).replace("\\", "/"),
+        "train": dataset_name + "/images/train",
+        "val": dataset_name + "/images/val",
         "nc": len(class_mapping),  # Number of classes
-        "names": class_mapping
+        "names": {k: class_mapping[k] for k in class_mapping},  # Keep order as provided
     }
 
-    # Save the YAML file
+    # Create the YAML file
     yaml_path = os.path.join(output_dir, f"{dataset_name}.yaml")
-    with open(yaml_path, "w") as yaml_file:
-        yaml.dump(yaml_data, yaml_file, default_flow_style=False)
+    with open(yaml_path, "w") as file:
+        yaml.dump(
+            yaml_content,
+            file,
+            default_flow_style=False,
+            sort_keys=False,  # Prevent sorting of dictionary keys
+        )
 
-    print(f"YAML file created: {yaml_path}")
+    print(f"YAML file created at: {yaml_path}")
     return yaml_path
+
+
+
+def save_image_names_to_json(source_dir, output_json):
+    """
+    Scans a folder for image files and saves their filenames to a JSON file.
+
+    Parameters:
+        source_dir (str): Path to the folder containing images.
+        output_json (str): Path to the JSON file where the list of image names will be saved.
+
+    Returns:
+        None
+    """
+    # Define supported image file extensions
+    image_extensions = {".jpg", ".jpeg", ".png", ".bmp", ".gif", ".tiff", ".webp"}
+    
+    # Get a list of all image files in the source directory
+    image_files = [f for f in os.listdir(source_dir) 
+                   if os.path.isfile(os.path.join(source_dir, f)) and 
+                   os.path.splitext(f)[1].lower() in image_extensions]
+    
+    # Save the list to a JSON file
+    with open(output_json, 'w') as json_file:
+        json.dump(image_files, json_file, indent=4)
+    
+    print(f"Saved {len(image_files)} image filenames to '{output_json}'.")
+
+
+def set_paths():
+    """
+    Sets the dataset paths and project path depending on whether the code is running in Google Colab or a local machine.
+
+    Returns:
+        dict: A dictionary containing the paths for the datasets and project.
+    """
+    try:
+        # Check if running in Google Colab
+        import google.colab
+        IN_COLAB = True
+    except ImportError:
+        IN_COLAB = False
+
+    if IN_COLAB:
+        # Google Colab environment
+        from google.colab import drive
+        drive.mount('/content/drive')
+        paths = {
+            "dataset1_path": "/content/drive/MyDrive/yaml_files/dataset1.yaml",
+            "dataset2_path": "/content/drive/MyDrive/yaml_files/dataset2.yaml",
+            "dataset3_path": "/content/drive/MyDrive/yaml_files/dataset3.yaml",
+            "dataset4_path": "/content/drive/MyDrive/yaml_files/dataset4.yaml",
+            "project_path": "/content/drive/MyDrive/FinalProjectRuntimeruns/train"
+        }
+    else:
+        # Local environment
+        paths = {
+            "dataset1_path": "yaml_files/dataset1.yaml",
+            "dataset2_path": "yaml_files/dataset2.yaml",
+            "dataset3_path": "yaml_files/dataset3.yaml",
+            "dataset4_path": "yaml_files/dataset4.yaml",
+            "project_path": "runs/train"
+        }
+
+    # Print paths for verification
+    print(f"Dataset 1 path: {paths['dataset1_path']}")
+    print(f"Dataset 2 path: {paths['dataset2_path']}")
+    print(f"Dataset 3 path: {paths['dataset3_path']}")
+    print(f"Dataset 4 path: {paths['dataset4_path']}")
+    print(f"Project path: {paths['project_path']}")
+
+    return paths
+

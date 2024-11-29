@@ -59,3 +59,24 @@ def plot_yolo_metrics(results_csv_path):
         print(f"An error occurred: {e}")
 
 
+
+def display_results(results):
+    """
+    Displays the results of the object detection model.
+
+    Parameters:
+        results (list): A list of result objects (e.g., from a model inference) that contain `boxes` and methods like `show()` and `plot()`.
+    
+    Returns:
+        None
+    """
+    # Show results using the `show()` method
+    for result in results:
+        result.show()
+    
+    # Display results with bounding boxes
+    for result in results:
+        boxes = result.boxes  # Assuming `result.boxes` contains the detected boxes
+        plt.imshow(result.plot())  # Assuming `result.plot()` returns an image with drawn boxes
+        plt.axis("off")  # Hide axes
+        plt.show()  # Display the plot
