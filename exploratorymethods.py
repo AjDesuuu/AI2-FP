@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import json
 import cv2
+import numpy as np
 from collections import Counter
 
 def plot_class_distribution(train_df, val_df, class_mapping):
@@ -162,13 +163,86 @@ def analyze_time_of_day(annotations_path):
 
 def check_file_format_distribution(images_train_path, images_val_path, images_test_path):
     """
-    Checks and visualizes the number of images per file format across train, val, and test directories.
+    Checks and visualizes the number of images per file format across the train, val, and test datasets.
+    Groups by file format and aggregates the counts across splits.
+
     Parameters:
         images_train_path (str): Path to the training images directory.
         images_val_path (str): Path to the validation images directory.
-        images_test_path (str): Path to the test images directory.
+        images_test_path (str): Path to the testing images directory.
+
     Returns:
         None (Displays a bar plot of file format distribution)
+    """
+    # List of valid image file extensions
+    valid_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif')
+
+    def count_file_formats(directory):
+        formats = []
+        
+        # Debugging: Check directory structure
+        print(f"Scanning directory: {directory}")
+        for root, _, files in os.walk(directory):
+            for file in files:
+                ext = os.path.splitext(file)[1].lower()
+                if ext in valid_extensions:
+                    formats.append(ext)
+        
+        if not formats:
+            print(f"No valid image files found in {directory}.")
+        
+        return Counter(formats)
+
+    # Count file formats for each dataset split
+    train_counts = count_file_formats(images_train_path)
+    val_counts = count_file_formats(images_val_path)
+    test_counts = count_file_formats(images_test_path)
+
+    # Combine all counts into one
+    format_counts = train_counts + val_counts + test_counts
+
+    # Handle case when no images are found
+    if not format_counts:
+        print("No image files were found across the specified directories.")
+        return
+
+    # Aggregate counts for the same formats (e.g., all .jpg files should be counted together)
+    aggregated_counts = Counter()
+    for format, count in format_counts.items():
+        # Remove any leading dot (.) from the file extension to group by format
+        clean_format = format.lstrip('.')
+        aggregated_counts[clean_format] += count
+
+    # Convert the counts into a DataFrame for plotting
+    format_df = pd.DataFrame(aggregated_counts.items(), columns=["Format", "Count"])
+    
+    # Sort by count
+    format_df = format_df.sort_values(by="Count", ascending=False)
+
+    # Plot the distribution of file formats
+    plt.figure(figsize=(12, 7))
+    sns.barplot(data=format_df, x="Format", y="Count", palette="viridis")
+    plt.title("Number of Images per File Format Across All Dataset Splits")
+    plt.xlabel("File Format")
+    plt.ylabel("Number of Images")
+    plt.tight_layout()
+    plt.show()
+
+    # Print the counts
+    print("File Format Distribution Across All Dataset Splits:")
+    print(format_df.to_string(index=False))
+
+def brightness_and_contrast_analysis(images_train_path, images_val_path, images_test_path):
+    """
+    Analyzes the brightness and contrast of images across the train, val, and test datasets.
+    
+    Parameters:
+        images_train_path (str): Path to the training images directory.
+        images_val_path (str): Path to the validation images directory.
+        images_test_path (str): Path to the testing images directory.
+    
+    Returns:
+        None (Displays the brightness and contrast statistics)
     """
     # Combine all file paths for analysis
     all_paths = {
@@ -176,37 +250,48 @@ def check_file_format_distribution(images_train_path, images_val_path, images_te
         "Validation": images_val_path,
         "Test": images_test_path,
     }
-    
-    # Initialize a Counter for file formats
-    format_counts = Counter()
-    # Analyze each dataset split
+
+    # Initialize lists to store brightness and contrast values
+    brightness_values = {"Train": [], "Validation": [], "Test": []}
+    contrast_values = {"Train": [], "Validation": [], "Test": []}
+
+    # Function to calculate brightness and contrast of an image
+    def calculate_brightness_and_contrast(img):
+        brightness = np.mean(img)
+        contrast = np.std(img)
+        return brightness, contrast
+
+    # Collect brightness and contrast values for each dataset split
     for split_name, path in all_paths.items():
-        formats = [
-            os.path.splitext(file)[1].lower()
-            for root, _, files in os.walk(path)
-            for file in files
-            if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.gif'))
-        ]
-        for fmt, count in Counter(formats).items():
-            format_counts[f"{split_name} ({fmt})"] = count
-    # Convert to DataFrame for plotting
-    format_df = pd.DataFrame(format_counts.items(), columns=["Split and Format", "Count"])
-    format_df = format_df.sort_values(by="Count", ascending=False)
-    # Plot the distribution
-    plt.figure(figsize=(10, 6))
-    sns.barplot(x="Split and Format", y="Count", data=format_df, palette="viridis")
-    plt.title("Number of Images per File Format by Dataset Split")
-    plt.xlabel("Dataset Split and File Format")
-    plt.ylabel("Number of Images")
-    plt.xticks(rotation=45, ha="right")
-    plt.grid(axis="y", linestyle="--", alpha=0.7)
-    plt.tight_layout()
-    plt.show()
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                    img_path = os.path.join(root, file)
+                    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Convert to grayscale
+                    if img is not None:
+                        brightness, contrast = calculate_brightness_and_contrast(img)
+                        brightness_values[split_name].append(brightness)
+                        contrast_values[split_name].append(contrast)
 
-    # Print the counts
-    print("File Format Distribution Across Splits:")
-    print(format_df.to_string(index=False))
+    # Combine all values for analysis
+    all_brightness = brightness_values["Train"] + brightness_values["Validation"] + brightness_values["Test"]
+    all_contrast = contrast_values["Train"] + contrast_values["Validation"] + contrast_values["Test"]
 
+    # Create DataFrames for brightness and contrast
+    brightness_df = pd.Series(all_brightness)
+    contrast_df = pd.Series(all_contrast)
+
+    # Get the descriptive statistics for brightness and contrast
+    brightness_stats = brightness_df.describe()
+    contrast_stats = contrast_df.describe()
+
+    # Print the results in the desired format
+    print("Brightness Analysis:")
+    print(brightness_stats)
+    print("\nContrast Analysis:")
+    print(contrast_stats)
+
+# functions below are still in testing
 def plot_image_dimensions_histogram(images_train_path, images_val_path, images_test_path):
     """
     Plots histograms for image heights and widths across train, val, and test datasets.
