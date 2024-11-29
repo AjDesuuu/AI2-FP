@@ -356,3 +356,295 @@ def detect_blurry_images(images_train_path, images_val_path, images_test_path, t
     # Print a summary
     print("Summary of Blurry Images:")
     print(results_df.to_string(index=False))
+
+def display_image_grid(image_dir, num_images_to_show=9, num_cols=3, figsize_per_row=(15, 5), verbose=True, seed=None):
+    """
+    Enhanced image grid display with additional metadata and analysis.
+    
+    Parameters:
+    -----------
+    image_dir : str
+        Path to the directory containing images
+    num_images_to_show : int, optional
+        Number of images to display (default is 9)
+    num_cols : int, optional
+        Number of columns in the grid (default is 3)
+    figsize_per_row : tuple, optional
+        Figure size multiplier per row (default is (15, 5))
+    verbose : bool, optional
+        If True, print additional information about the images
+    seed : int or None, optional
+        A seed for the random number generator to ensure reproducibility (default is None)
+    
+    Returns:
+    --------
+    None
+        Displays the image grid using matplotlib
+    """
+    # List all images in the directory
+    image_files = os.listdir(image_dir)
+    
+    # Verbose analysis
+    if verbose:
+        print("Dataset Image Inspection:")
+        print(f"Total images in directory: {len(image_files)}")
+    
+    # Set the seed for reproducibility (if provided)
+    if seed is not None:
+        random.seed(seed)
+        if verbose:
+            print(f"Using seed: {seed}")
+    
+    # Select a random sample of images
+    sample_images = random.sample(image_files, min(num_images_to_show, len(image_files)))
+    
+    if verbose:
+        print(f"Images to be displayed: {len(sample_images)}")
+    
+    # Calculate grid dimensions
+    num_rows = math.ceil(len(sample_images) / num_cols)
+    
+    # Create a figure to display the images
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(figsize_per_row[0], figsize_per_row[1] * num_rows))
+    
+    # Flatten the axes array to make it easier to iterate
+    axes = axes.flatten() if num_rows > 1 else axes
+    
+    # Loop through each image to display it
+    for i, img_file in enumerate(sample_images):
+        img_path = os.path.join(image_dir, img_file)
+        img = Image.open(img_path)
+        
+        # Display the image
+        axes[i].imshow(img)
+        
+        # Add more detailed title
+        if verbose:
+            img_size = img.size
+            img_mode = img.mode
+            axes[i].set_title(f"{img_file}\n{img_size[0]}x{img_size[1]} {img_mode}", fontsize=10)
+        else:
+            axes[i].set_title(f"Image: {img_file}")
+        
+        axes[i].axis('off')  # Turn off axis
+    
+    # Hide any unused subplots
+    for j in range(len(sample_images), len(axes)):
+        fig.delaxes(axes[j])
+    
+    plt.tight_layout()
+    plt.show()
+
+
+def plot_image_resolution_distribution(image_dir):
+    """
+    Provides visualization of image resolution distribution using histograms.
+    
+    Parameters:
+    -----------
+    image_dir : str
+        Directory containing the dataset images.
+    
+    Returns:
+    --------
+    None
+        Displays the plots for image resolution histograms.
+    """
+    image_widths = []
+    image_heights = []
+    
+    # Walk through all subdirectories
+    for root, dirs, files in os.walk(image_dir):
+        for file in files:
+            # Check for image files (common image extensions)
+            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff')):
+                try:
+                    img_path = os.path.join(root, file)
+                    img = cv2.imread(img_path)
+                    
+                    # Check if image is successfully read
+                    if img is not None:
+                        image_widths.append(img.shape[1])  # Width
+                        image_heights.append(img.shape[0])  # Height
+                except PermissionError as e:
+                    print(f"Permission error accessing {img_path}: {e}")
+                except Exception as e:
+                    print(f"Error processing {img_path}: {e}")
+    
+    # Create DataFrame for image resolutions
+    image_resolution_df = pd.DataFrame({
+        'Width': image_widths,
+        'Height': image_heights
+    })
+    
+    # Plot histograms for image dimensions
+    fig, axes = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Width histogram
+    sns.histplot(image_resolution_df['Width'], kde=True, bins=30, ax=axes[0], color="blue", alpha=0.7)
+    axes[0].set_title("Image Width Distribution")
+    axes[0].set_xlabel("Width (pixels)")
+    axes[0].set_ylabel("Frequency")
+    
+    # Height histogram
+    sns.histplot(image_resolution_df['Height'], kde=True, bins=30, ax=axes[1], color="green", alpha=0.7)
+    axes[1].set_title("Image Height Distribution")
+    axes[1].set_xlabel("Height (pixels)")
+    axes[1].set_ylabel("Frequency")
+    
+    plt.tight_layout()
+    plt.show()
+    
+    # Print some additional statistics
+    print("Image Resolution Statistics:")
+    print(image_resolution_df.describe())
+
+
+def brightness_and_contrast_analysis(images_train_path, images_val_path, images_test_path):
+    """
+    Analyzes the brightness and contrast of images across the train, val, and test datasets.
+    
+    Parameters:
+        images_train_path (str): Path to the training images directory.
+        images_val_path (str): Path to the validation images directory.
+        images_test_path (str): Path to the testing images directory.
+    
+    Returns:
+        dict: A dictionary containing brightness and contrast values for each dataset split.
+    """
+    all_paths = {
+        "Train": images_train_path,
+        "Validation": images_val_path,
+        "Test": images_test_path,
+    }
+
+    brightness_values = {"Train": [], "Validation": [], "Test": []}
+    contrast_values = {"Train": [], "Validation": [], "Test": []}
+
+    def calculate_brightness_and_contrast(img):
+        brightness = np.mean(img)
+        contrast = np.std(img)
+        return brightness, contrast
+
+    for split_name, path in all_paths.items():
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(('.jpg', '.jpeg', '.png', '.bmp', '.tiff')):
+                    img_path = os.path.join(root, file)
+                    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+                    if img is not None:
+                        brightness, contrast = calculate_brightness_and_contrast(img)
+                        brightness_values[split_name].append(brightness)
+                        contrast_values[split_name].append(contrast)
+
+    all_brightness = brightness_values["Train"] + brightness_values["Validation"] + brightness_values["Test"]
+    all_contrast = contrast_values["Train"] + contrast_values["Validation"] + contrast_values["Test"]
+
+    brightness_df = pd.Series(all_brightness)
+    contrast_df = pd.Series(all_contrast)
+
+    brightness_stats = brightness_df.describe()
+    contrast_stats = contrast_df.describe()
+
+    print("Brightness Analysis:")
+    print(brightness_stats)
+    print("\nContrast Analysis:")
+    print(contrast_stats)
+
+    return brightness_values, contrast_values
+
+
+def plot_brightness_contrast(brightness_values, contrast_values):
+    """
+    Plots a scatter plot of brightness vs. contrast for the images in the datasets.
+    
+    Parameters:
+        brightness_values (dict): Dictionary of brightness values for each dataset split.
+        contrast_values (dict): Dictionary of contrast values for each dataset split.
+    """
+    brightness_values_flat = []
+    contrast_values_flat = []
+
+    for split_name in ["Train", "Validation", "Test"]:
+        brightness_values_flat.extend(brightness_values[split_name])
+        contrast_values_flat.extend(contrast_values[split_name])
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(brightness_values_flat, contrast_values_flat, alpha=0.6, color="blue")
+    plt.xlabel("Brightness")
+    plt.ylabel("Contrast")
+    plt.title("Brightness and Contrast Analysis of Images")
+    plt.grid(True)
+    plt.show()
+
+
+def color_analysis(data_dir: str, image_extensions=None):
+    """
+    Analyzes the average RGB color intensities of images in the given directory and its subfolders.
+    
+    Parameters:
+        data_dir (str): The base directory containing images and subdirectories (train, val, test).
+        image_extensions (list): List of allowed image file extensions (e.g., ['.jpg', '.jpeg', '.png']).
+    
+    Returns:
+        None (Displays histograms of the RGB channels and prints the average intensities)
+    """
+    if image_extensions is None:
+        image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.tiff']
+
+    # Lists to store color channel means
+    reds = []
+    greens = []
+    blues = []
+
+    # Convert data_dir to a Path object
+    data_dir = Path(data_dir)
+    
+    # Loop through the main directory and all subfolders
+    for folder in data_dir.iterdir():
+        if folder.is_dir(): 
+            for filepath in folder.rglob("*"):
+                if filepath.suffix.lower() in image_extensions:
+                    try:
+                        with Image.open(filepath) as img:
+                            img = img.convert("RGB") 
+                            img_array = np.array(img)
+                            # Calculate mean for each RGB channel
+                            reds.append(img_array[:, :, 0].mean())
+                            greens.append(img_array[:, :, 1].mean())
+                            blues.append(img_array[:, :, 2].mean())
+                    except Exception as e:
+                        print(f"Could not open image {filepath}: {e}")
+    
+    # Plot histograms for each color channel
+    plt.figure(figsize=(15, 5))
+
+    # Red channel histogram
+    plt.subplot(1, 3, 1)
+    plt.hist(reds, bins=30, color='red', edgecolor='black', alpha=0.7)
+    plt.title("Red Channel Intensity")
+    plt.xlabel("Average Intensity")
+    plt.ylabel("Frequency")
+
+    # Green channel histogram
+    plt.subplot(1, 3, 2)
+    plt.hist(greens, bins=30, color='green', edgecolor='black', alpha=0.7)
+    plt.title("Green Channel Intensity")
+    plt.xlabel("Average Intensity")
+    plt.ylabel("Frequency")
+
+    # Blue channel histogram
+    plt.subplot(1, 3, 3)
+    plt.hist(blues, bins=30, color='blue', edgecolor='black', alpha=0.7)
+    plt.title("Blue Channel Intensity")
+    plt.xlabel("Average Intensity")
+    plt.ylabel("Frequency")
+
+    # Adjust layout to prevent overlap
+    plt.tight_layout()
+    # Show the plot
+    plt.show()
+
+    print("Average Red Intensity:", np.mean(reds))
+    print("Average Green Intensity:", np.mean(greens))
+    print("Average Blue Intensity:", np.mean(blues))
