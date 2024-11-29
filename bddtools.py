@@ -44,17 +44,18 @@ def flatten_folders(source_dir, destination_dir):
 def copy_files(source_dir, destination_dir, items=None, pick=None):
     """
     Copies files from the source directory to the destination directory.
-    
-    - If `items` is specified, randomly selects that many files to copy.
+
+    - If `items` is specified, checks if the destination already has sufficient files 
+      and only copies additional files if needed.
     - If `pick` is specified, uses a JSON file containing a list of filenames to copy.
     - If neither is specified, copies all files.
-    
+
     Parameters:
         source_dir (str): Path to the source directory.
         destination_dir (str): Path to the destination directory.
         items (int, optional): Number of files to copy. Ignored if `pick` is specified.
         pick (str, optional): Path to a JSON file containing a list of filenames to copy.
-    
+
     Returns:
         None
     """
@@ -65,6 +66,10 @@ def copy_files(source_dir, destination_dir, items=None, pick=None):
     if not all_files:
         print(f"No files found in '{source_dir}'.")
         return
+
+    # Get the list of existing files in the destination directory
+    existing_files = [f for f in os.listdir(destination_dir) if os.path.isfile(os.path.join(destination_dir, f))]
+    existing_count = len(existing_files)
 
     # Use the "pick" JSON file to select specific files
     if pick:
@@ -77,17 +82,32 @@ def copy_files(source_dir, destination_dir, items=None, pick=None):
             return
     # Otherwise, randomly sample a subset of files or copy all files
     elif items is not None:
-        files_to_copy = random.sample(all_files, min(items, len(all_files)))
+        remaining_needed = max(0, items - existing_count)
+        if remaining_needed == 0:
+            print(f"Destination already contains {existing_count} files, which meets or exceeds the requested {items}.")
+            return
+        files_to_copy = random.sample(all_files, min(remaining_needed, len(all_files)))
     else:
         files_to_copy = all_files
+
+    skipped_count = 0
 
     # Copy the files to the destination directory
     for file in tqdm(files_to_copy, desc="Copying files"):
         src_path = os.path.join(source_dir, file)
         dest_path = os.path.join(destination_dir, file)
+
+        # Check if the file already exists
+        if os.path.exists(dest_path):
+            skipped_count += 1
+            continue
+
+        # Copy the file
         shutil.copy(src_path, dest_path)
 
-    print(f"Copied {len(files_to_copy)} files from '{source_dir}' to '{destination_dir}'.")
+    print(f"Copying complete. Skipped {skipped_count} files due to existing duplicates.")
+    print(f"Copied {len(files_to_copy) - skipped_count} new files to '{destination_dir}'.")
+
 
 
 def move_files(source_dir, destination_dir):
