@@ -1,5 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
+from ultralytics import YOLO
+import cv2
 
 def plot_yolo_metrics(results_csv_path):
     """
@@ -80,3 +82,53 @@ def display_results(results):
         plt.show()  # Display the plot
 
     return
+
+
+
+def display_predictions_side_by_side(model_path, test_folder, num_images_to_show=5, imgsz=640, device=0):
+    """
+    Displays original and predicted images side by side for easy comparison.
+
+    Args:
+        model_path (str): Path to the trained YOLO model file (e.g., "path_to_model.pt").
+        test_folder (str): Path to the folder containing test images.
+        num_images_to_show (int): Number of images to display (default is 5).
+        imgsz (int): Image size to resize during inference (default is 640).
+        device (int or str): Device to use for inference (e.g., 0 for GPU, 'cpu' for CPU).
+    """
+    # Load the trained YOLO model
+    model = YOLO(model_path)
+
+    # Run inference on the test folder
+    results = model.predict(
+        source=test_folder,  # Test folder containing images
+        save=False,  # Do not save predictions to disk
+        imgsz=imgsz,  # Resize images for inference
+        device=device,  # Use GPU (0) or CPU ('cpu')
+        verbose=False
+    )
+
+    # Display the images
+    for idx, result in enumerate(results[:num_images_to_show]):
+        # Load the original image
+        original_image = cv2.imread(result.path)  # Read the original image
+        original_image = cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB)  # Convert BGR to RGB
+
+        # Get the predicted image
+        predicted_image = result.plot()  # Generate the predicted image with annotations
+
+        # Create a side-by-side plot
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        plt.imshow(original_image)
+        plt.axis("off")
+        plt.title("Original Image")
+
+        plt.subplot(1, 2, 2)
+        plt.imshow(predicted_image)
+        plt.axis("off")
+        plt.title("Predicted Image")
+
+        plt.suptitle(f"Image {idx+1}", fontsize=16)
+        plt.show()
+
