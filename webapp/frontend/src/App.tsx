@@ -57,7 +57,7 @@ const models = {
   },
   model_12: {
     label: "Model 12",
-    description: "yolov8n weight, 50 epochs, batch 32, Adam optimizer, cls 1.5, uses CA",
+    description: "yolov8n weight, 25 epochs, batch 32, Adam optimizer, cls 1.5, uses CA",
   },
   model_13: {
     label: "Model 13",
@@ -112,7 +112,7 @@ function App() {
   }
 
   return (
-    <div style={{ display: "flex", gap: 20 }}>
+    <div style={{ display: "flex", gap: 20 }} className="main_page">
       <div style={{ flex: 1, padding: 20 }}>
         <h1 style={{ fontSize: 32, marginBottom: 20 }}>YOLOv8 Road Object Analysis</h1>
         <p style={{ marginBottom: 30 }}>
