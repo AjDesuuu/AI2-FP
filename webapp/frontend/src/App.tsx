@@ -5,7 +5,7 @@ const models = {
   model_15_2: {
     label: "Model 15v2 (best model)",
     description:
-      "yolov8m weight, 47 epochs, batch 128, 1.5 images (augmented), Adam optimizer with uses CA, dropout=0.3",
+      "yolov8m weight, 47 epochs, batch 128, 100k images, Adam optimizer with uses Cosine Anneling (CA), dropout=0.3",
   },
   model_1: {
     label: "Model 1",
@@ -57,7 +57,7 @@ const models = {
   },
   model_12: {
     label: "Model 12",
-    description: "yolov8n weight, 50 epochs, batch 32, Adam optimizer, cls 1.5, uses Cosine Anneling (CA)",
+    description: "yolov8n weight, 50 epochs, batch 32, Adam optimizer, cls 1.5, uses CA",
   },
   model_13: {
     label: "Model 13",
@@ -69,12 +69,12 @@ const models = {
   },
   model_14_5: {
     label: "Model 14_5",
-    description: "yolov8m weight, 15 epochs, batch 32, 1.5 images (augmented), Adam optimizer with CA",
+    description: "yolov8m weight, 15 epochs, batch 32, 1.5k images (augmented), Adam optimizer with CA",
   },
-  model15: {
+  model_15: {
     label: "Model 15",
     description:
-      "yolov8m weight, 5 epochs, batch 128, 1.5 images (augmented), Adam optimizer with uses CA, dropout=0.3",
+      "yolov8m weight, 5 epochs, batch 128, 1.5k images (augmented), Adam optimizer with uses CA, dropout=0.3",
   },
 };
 
